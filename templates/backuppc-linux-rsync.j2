@@ -1,0 +1,19 @@
+#
+# {{ item.name }} backup of everything as user backuppc
+#
+$Conf{XferMethod} = 'rsync';
+
+$Conf{BackupFilesExclude} = {
+  '*' => [
+    '/sys',
+    '/proc',
+    '/cdrom',
+    '/dvd',
+    '/floppy',
+    '/mnt'
+  ]
+};
+
+{% if item.ip_address is defined -%}
+$Conf{ClientNameAlias} = '{{ item.ip_address }}';
+{% endif -%}

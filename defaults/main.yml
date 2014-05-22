@@ -1,0 +1,5 @@
+---
+backuppc_users:
+  -
+    name: admin
+    pass: admin

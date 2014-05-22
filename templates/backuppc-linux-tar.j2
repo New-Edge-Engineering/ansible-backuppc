@@ -1,0 +1,33 @@
+#
+# {{ item.name }} backup of everything as user backuppc
+#
+$Conf{XferMethod} = 'tar';
+
+$Conf{TarShareName} = [
+  '/'
+];
+
+$Conf{BackupFilesExclude} = {
+  '*' => [
+    '/sys',
+    '/proc',
+    '/cdrom',
+    '/dvd',
+    '/floppy',
+    '/mnt'
+  ]
+};
+
+{% if item.ip_address is defined -%}
+$Conf{ClientNameAlias} = '{{ item.ip_address }}';
+{% endif -%}
+
+$Conf{TarClientCmd} = 'sudo $tarPath -c -v -f - -C $shareName --totals';
+$Conf{TarClientRestoreCmd} = 'sudo $tarPath -x -p -numeric-owner -same-owner -v -f - -C $shareName';
+
+# remove extra shell escapes ($fileList+ etc.) that are
+# needed for remote backups but may break local ones
+$Conf{TarFullArgs} = '$fileList';
+$Conf{TarIncrArgs} = '--newer=$incrDate $fileList';
+$Conf{EMailAdminUserName} = '';
+$Conf{EMailFromUserName} = '';

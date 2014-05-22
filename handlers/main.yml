@@ -1,0 +1,7 @@
+---
+- name: restart backuppc
+  service: name=backuppc state=restarted
+  service: name=fcgiwrap state=restarted
+
+- name: restart windbind
+  service: name=winbind state=restarted

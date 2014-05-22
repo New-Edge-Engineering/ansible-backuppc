@@ -1,0 +1,20 @@
+#
+# {{ item.name }} backup of everything as user backuppc
+#
+$Conf{XferMethod} = 'rsync';
+
+$Conf{BackupFilesExclude} = [
+    '.Trash',
+    '/Trash',
+    '/automount',
+    '/Network',
+    '/private/var/automount',
+    '/private/var/run',
+    '/private/var/vm',
+    '/private/var/tmp',
+    '/private/tmp',
+    'Caches',
+    'CachedMessages'
+];
+
+$Conf{ClientNameAlias} = '{{ item.ip_address }}';
