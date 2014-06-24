@@ -54,7 +54,7 @@
     dest=/etc/backuppc/config.pl
     backrefs=yes
     regexp="^\\$Conf{EMailUserDestDomain}"
-    line="$Conf{EMailUserDestDomain} = '@{{ backuppc_domain }}';"
+    line="$Conf{EMailUserDestDomain} = '@{{ backuppc_email_domain }}';"
   tags:
     - backuppc
     - configuration
@@ -64,7 +64,7 @@
     dest=/etc/backuppc/config.pl
     backrefs=yes
     regexp="^\\$Conf{CgiURL}"
-    line="$Conf{CgiURL} = 'http://backuppc.{{ backuppc_domain }}/backuppc/index.cgi';"
+    line="$Conf{CgiURL} = 'http://backuppc.{{ backuppc_email_domain }}/backuppc/index.cgi';"
   tags:
     - backuppc
     - configuration
@@ -113,7 +113,7 @@
 - name: create hosts
   lineinfile:
     dest=/etc/backuppc/hosts
-    line="{{ item.name }}   0       backuppc"
+    line="{{ item.name }} 0 {{ item.contact|default('backuppc') }} {{ item.user|default('') }}"
   with_items: backuppc_hosts
   notify:
     - restart backuppc

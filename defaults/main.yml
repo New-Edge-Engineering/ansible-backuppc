@@ -1,5 +1,6 @@
 ---
 backuppc_domain: 'localhost'
+backuppc_email_domain: 'newedgeengineering.com'
 backuppc_hosts: [] # contains a list of: name, os and type (also optional ip_address and key) attributes.
 backuppc_users:
   -
