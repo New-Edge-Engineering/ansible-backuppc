@@ -19,8 +19,8 @@ $Conf{BackupFilesExclude} = [
     'CachedMessages'
 ];
 
-$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
+$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+';
 
-$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
+$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+';
 
 $Conf{ClientNameAlias} = '{{ item.ip_address }}';
