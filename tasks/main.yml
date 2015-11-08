@@ -74,7 +74,7 @@
     dest=/etc/backuppc/config.pl
     backrefs=yes
     regexp="^\\$Conf{TarClientCmd}"
-    line="$Conf{TarClientCmd} = '$sshPath -q -x -n -l backuppc $host'"
+    line="$Conf{TarClientCmd} = '$sshPath -q -x -n -l backuppc $host env LC_ALL=C $tarPath -x -p --numeric-owner --same-owner -v -f - -C $shareName+';"
   tags:
     - backuppc
     - configuration
@@ -84,7 +84,7 @@
     dest=/etc/backuppc/config.pl
     backrefs=yes
     regexp="^\\$Conf{TarClientRestoreCmd}"
-    line="$Conf{TarClientRestoreCmd} = '$sshPath -q -x -l backuppc $host'"
+    line="$Conf{TarClientRestoreCmd} = '$sshPath -q -x -l backuppc $host env LC_ALL=C $tarPath -x -p --numeric-owner --same-owner -v -f - -C $shareName+';"
   tags:
     - backuppc
     - configuration
