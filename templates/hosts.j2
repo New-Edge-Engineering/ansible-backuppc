@@ -1,0 +1,16 @@
+#============================================================= -*-perl-*-
+#
+# {{ansible_managed}}
+#
+# Host file list for BackupPC.
+#
+#
+# The first non-comment non-empty line gives the field names and should
+# not be edited!!
+#
+host        dhcp    user    moreUsers     # <--- do not edit this line
+
+{% for host in backuppc_hosts|sort %}
+{{ host.name }} 0 {{ host.contact|default('backuppc') }} {{ host.user|default('') }} #
+{% endfor %}
+
