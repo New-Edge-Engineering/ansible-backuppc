@@ -16,7 +16,8 @@ $Conf{BackupFilesExclude} = [
     '/private/var/tmp',
     '/private/tmp',
     'Caches',
-    'CachedMessages'
+    'CachedMessages',
+    '/Volumes'
 ];
 
 $Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+';
