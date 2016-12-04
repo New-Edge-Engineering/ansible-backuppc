@@ -1,7 +1,8 @@
 ---
 # Software installation
 - name: ensure packages are installed
-  apt: pkg={{item}}
+  apt:
+    pkg: "{{item}}"
   with_items:
     - backuppc
     - rsync
@@ -15,10 +16,10 @@
 # Software fixes
 - name: add missing $Conf{Ping6Path}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{Ping6Path}"
-    line="$Conf{Ping6Path} = '/bin/ping6';"
+    dest: /etc/backuppc/config.pl
+    backrefs: yes
+    regexp: "^\\$Conf{Ping6Path}"
+    line: "$Conf{Ping6Path} = '/bin/ping6';"
   notify:
     - restart backuppc
   tags:
@@ -39,10 +40,10 @@
 # Software configuration
 - name: update configuration $Conf{EMailFromUserName}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{EMailFromUserName}"
-    line="$Conf{EMailFromUserName} = 'backuppc@{{ backuppc_domain }}';"
+    dest: /etc/backuppc/config.pl
+    backrefs: yes
+    regexp: "^\\$Conf{EMailFromUserName}"
+    line: "$Conf{EMailFromUserName} = 'backuppc@{{ backuppc_domain }}';"
   notify:
     - restart backuppc
   tags:
@@ -51,60 +52,60 @@
 
 - name: update configuration $Conf{EMailUserDestDomain}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{EMailUserDestDomain}"
-    line="$Conf{EMailUserDestDomain} = '@{{ backuppc_email_domain }}';"
+    dest: /etc/backuppc/config.pl
+    backrefs: yes
+    regexp: "^\\$Conf{EMailUserDestDomain}"
+    line: "$Conf{EMailUserDestDomain} = '@{{ backuppc_email_domain }}';"
   tags:
     - backuppc
     - configuration
 
 - name: update configuration $Conf{CgiURL}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{CgiURL}"
-    line="$Conf{CgiURL} = 'http://backuppc.{{ backuppc_email_domain }}/backuppc/index.cgi';"
+    dest: /etc/backuppc/config.pl
+    backrefs: yes
+    regexp: "^\\$Conf{CgiURL}"
+    line: "$Conf{CgiURL} = 'http://backuppc.{{ backuppc_email_domain }}/backuppc/index.cgi';"
   tags:
     - backuppc
     - configuration
 
 - name: update configuration $Conf{TarClientCmd}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{TarClientCmd}"
-    line="$Conf{TarClientCmd} = '$sshPath -q -x -n -l backuppc $host env LC_ALL=C $tarPath -x -p --numeric-owner --same-owner -v -f - -C $shareName+';"
+    dest: /etc/backuppc/config.pl
+    backrefs: yes
+    regexp: "^(\\$Conf{TarClientCmd}.*) root (\\$host.*)$"
+    line: "\\1 backuppc \\2"
   tags:
     - backuppc
     - configuration
 
 - name: update configuration $Conf{TarClientRestoreCmd}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{TarClientRestoreCmd}"
-    line="$Conf{TarClientRestoreCmd} = '$sshPath -q -x -l backuppc $host env LC_ALL=C $tarPath -x -p --numeric-owner --same-owner -v -f - -C $shareName+';"
+    backrefs: yes
+    dest: /etc/backuppc/config.pl
+    line: "\\1 backuppc \\2"
+    regexp: "^(\\$Conf{TarClientRestoreCmd}.*) root (\\$host.*)$"
   tags:
     - backuppc
     - configuration
 
 - name: update configuration $Conf{RsyncClientCmd}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{RsyncClientCmd}"
-    line="$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
+    backrefs: yes
+    dest: /etc/backuppc/config.pl
+    line: "$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
+    regexp: "^\\$Conf{RsyncClientCmd}"
   tags:
     - backuppc
     - configuration
 
 - name: update configuration $Conf{RsyncClientRestoreCmd}
   lineinfile:
-    dest=/etc/backuppc/config.pl
-    backrefs=yes
-    regexp="^\\$Conf{RsyncClientRestoreCmd}"
-    line="$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
+    backrefs: yes
+    dest: /etc/backuppc/config.pl
+    line: "$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
+    regexp: "^\\$Conf{RsyncClientRestoreCmd}"
   tags:
     - backuppc
     - configuration
@@ -112,8 +113,8 @@
 #  host setup
 - name: create hosts
   lineinfile:
-    dest=/etc/backuppc/hosts
-    line="{{ item.name }} 0 {{ item.contact|default('backuppc') }} {{ item.user|default('') }}"
+    dest: /etc/backuppc/hosts
+    line: "{{ item.name }} 0 {{ item.contact|default('backuppc') }} {{ item.user|default('') }}"
   with_items: backuppc_hosts
   notify:
     - restart backuppc
@@ -124,11 +125,11 @@
 
 - name: create hosts configuration
   template:
-    dest="/etc/backuppc/{{ item.name }}.pl"
-    src="backuppc-{{ item.os }}-{{ item.type }}.j2"
-    owner=backuppc
-    group=www-data
-    mode=0640
+    dest: "/etc/backuppc/{{ item.name }}.pl"
+    src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
+    owner: backuppc
+    group: www-data
+    mode: 0640
   with_items: backuppc_hosts
   notify:
     - restart backuppc
@@ -169,10 +170,15 @@
     - configuration
 
 - name: add users to backuppc htpasswd file
-  htpasswd: path=/etc/backuppc/htpasswd name={{ item.name }} password={{ item.pass }} owner=backuppc group=www-data mode=0640
+  htpasswd:
+    path: /etc/backuppc/htpasswd
+    name: "{{ item.name }}"
+    password: "{{ item.pass }}"
+    owner: backuppc
+    group: www-data
+    mode: 0640
   with_items: backuppc_users
   tags:
     - backuppc
     - web site
     - credientals
-
