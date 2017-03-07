@@ -30,9 +30,6 @@
   notify:
     - restart backuppc
     - restart apache2
-  tags:
-    - backuppc
-    - configuration
 
 #  host setup
 - name: create hosts
@@ -88,10 +85,15 @@
     - configuration
 
 - name: add users to backuppc htpasswd file
-  htpasswd: path=/etc/backuppc/htpasswd name={{ item.name }} password={{ item.pass }} owner=backuppc group=www-data mode=0640
+  htpasswd:
+    path: /etc/backuppc/htpasswd
+    name: "{{ item.name }}"
+    password: "{{ item.pass }}"
+    owner: backuppc
+    group: www-data
+    mode: 0640
   with_items: backuppc_users
   tags:
     - backuppc
     - web site
     - credientals
-
