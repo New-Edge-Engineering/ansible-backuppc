@@ -6,6 +6,15 @@ is welcomed and can be done via
 
 ## Requirements & Dependencies ##
 - Tested on Mac OS X with Ansible 1.5.
+- Tested on Ubuntu Precise with Ansible 2.2.1.0
+
+## Tests ##
+You can test this role by using the provided Vagrant file in ./tests
+
+```bash
+bacuppc/tests$ vagrant up
+bacuppc/tests$ vagrant ssh
+```
 
 ## License ##
 

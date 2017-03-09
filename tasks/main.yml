@@ -51,9 +51,9 @@
     dest="/etc/backuppc/{{ item.name }}.pl"
     src="backuppc-{{ item.os }}-{{ item.type }}.j2"
     mode="u=rw,g=r,o="
-    owner=backuppc
-    group=www-data
-  with_items: backuppc_hosts
+    owner="backuppc"
+    group="www-data"
+  with_items: "{{ backuppc_hosts }}"
   notify:
     - restart backuppc
   tags:
@@ -75,7 +75,7 @@
 - name: fetch generated public ssh key
   fetch:
     src=/var/lib/backuppc/.ssh/id_rsa.pub
-    dest=/tmp/fetched
+    dest=/tmp/backuppc_ssh.pub
   when: ssh_key_generation|changed
   register: ssh_key_fetched
   tags:
@@ -89,11 +89,12 @@
     path: /etc/backuppc/htpasswd
     name: "{{ item.name }}"
     password: "{{ item.pass }}"
-    owner: backuppc
-    group: www-data
+    owner: "backuppc"
+    group: "www-data"
     mode: 0640
-  with_items: backuppc_users
+  with_items: "{{ backuppc_users }}"
   tags:
     - backuppc
-    - web site
+    - website
     - credientals
+
