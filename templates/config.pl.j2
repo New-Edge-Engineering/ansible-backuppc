@@ -1189,7 +1189,7 @@ $Conf{RsyncClientPath} = '/usr/bin/rsync';
 # This setting only matters if $Conf{XferMethod} = 'rsync'.
 #
 #$Conf{RsyncClientCmd} = '$sshPath -q -x -l root $host $rsyncPath $argList+';
-$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+';
+$Conf{RsyncClientCmd} = '$sshPath -o StrictHostKeyChecking=no -q -x -l backuppc $host sudo $rsyncPath $argList+';
 
 #
 # Full command to run rsync for restore on the client.  The following
@@ -1211,7 +1211,7 @@ $Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argLi
 # redirection and pipes; put that in a script if you need it.
 #
 #$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l root $host $rsyncPath $argList+';
-$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+';
+$Conf{RsyncClientRestoreCmd} = '$sshPath -o StrictHostKeyChecking=no -q -x -l backuppc $host sudo $rsyncPath $argList+';
 
 #
 # Share name to backup.  For $Conf{XferMethod} = "rsync" this should
@@ -1672,7 +1672,7 @@ $Conf{PingCmd} = '$pingPath -c 1 $host';
 # WAN or dialup connections the round-trip time will be typically more
 # than 20msec.  Tune if necessary.
 #
-$Conf{PingMaxMsec} = 20;
+$Conf{PingMaxMsec} = 30;
 
 #
 # Compression level to use on files.  0 means no compression.  Compression
