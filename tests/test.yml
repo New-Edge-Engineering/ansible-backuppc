@@ -1,0 +1,6 @@
+---
+- hosts: vagrant1
+  become: True
+  remote_user: root
+  roles:
+    - ../../backuppc
