@@ -8,6 +8,28 @@ is welcomed and can be done via
 - Tested on Mac OS X with Ansible 1.5.
 - Tested on Ubuntu Precise with Ansible 2.2.1.0
 
+## Variables ##
+see defaults/main.yml for variables to overwrite and their explainations
+
+Example role include:
+```
+vars:
+  - backuppc_url: 'http://some.domain.tld'
+  - backuppc_hosts: [
+     { name: 'some.host.tld', os: 'linux', type: 'rsync' }
+     { name: 'other.host.tld', os: 'linux', type: 'rsync' }
+   ]
+ - backuppc_users: [ 
+     { name: 'backuppc', pass: 'secret' }
+   ]
+ - backuppc_manage_hosts: yes
+ 
+roles:
+  - backuppc
+
+    }
+```
+
 ## Tests ##
 You can test this role by using the provided Vagrant file in ./tests
 

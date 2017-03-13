@@ -11,6 +11,14 @@
     - backuppc
     - packages
 
+- name: adjust apache2 config
+  lineinfile:
+    name: /etc/apache2/ports.conf
+    regexp: '^Listen.*80$'
+    line: 'Listen localhost:80'
+    state: present
+  notify: restart apache2
+
 - name: set pool symlink
   file:
     src=/var/lib/backuppc/pc
@@ -31,7 +39,7 @@
     - restart backuppc
     - restart apache2
 
-#  host setup
+# host setup
 - name: create hosts
   template:
     src=hosts.j2
@@ -48,11 +56,12 @@
 
 - name: create hosts configuration
   template:
-    dest="/etc/backuppc/{{ item.name }}.pl"
-    src="backuppc-{{ item.os }}-{{ item.type }}.j2"
-    mode="u=rw,g=r,o="
-    owner="backuppc"
-    group="www-data"
+    dest: "/etc/backuppc/{{ item.name }}.pl"
+    src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
+    mode: "u=rw,g=r,o="
+    owner: "backuppc"
+    group: "www-data"
+    backup: yes
   with_items: "{{ backuppc_hosts }}"
   notify:
     - restart backuppc
@@ -66,7 +75,7 @@
   user:
     name=backuppc
     generate_ssh_key=yes
-  register: ssh_key_generation
+  register: backuppc_server_ssh_key
   tags:
     - backuppc
     - ssh
@@ -76,7 +85,7 @@
   fetch:
     src=/var/lib/backuppc/.ssh/id_rsa.pub
     dest=/tmp/backuppc_ssh.pub
-  when: ssh_key_generation|changed
+  when: backuppc_server_ssh_key|changed
   register: ssh_key_fetched
   tags:
     - backuppc
@@ -91,10 +100,15 @@
     password: "{{ item.pass }}"
     owner: "backuppc"
     group: "www-data"
-    mode: 0640
+    mode: 'u=rw,g=r,o='
   with_items: "{{ backuppc_users }}"
   tags:
     - backuppc
     - website
     - credientals
+
+# loop over backuppc_hosts is done inside manage_hosts.yml
+- name: manage hosts
+  include: manage_hosts.yml
+  when: backuppc_manage_hosts
 

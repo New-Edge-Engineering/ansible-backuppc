@@ -14,3 +14,5 @@ backuppc_users:
   -
     name: backuppc
     pass: admin
+
+backuppc_manage_hosts: no
