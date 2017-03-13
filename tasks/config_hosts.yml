@@ -34,4 +34,7 @@
   copy:
     src: 'hostconfig/'
     dest: '/etc/backuppc/'
+    mode: "u=rw,g=r,o="
+    owner: "backuppc"
+    group: "www-data"
 
