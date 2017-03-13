@@ -10,13 +10,14 @@ $Conf{BackupFilesExclude} = {
     '/cdrom',
     '/dvd',
     '/floppy',
+    '/var/lib/backuppc',
     '/mnt'
   ]
 };
 
-$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+';
+$Conf{RsyncClientCmd} = '$sshPath -o StrictHostKeyChecking=no -q -x -l backuppc $host sudo $rsyncPath $argList+';
 
-$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc sudo $host $rsyncPath $argList+';
+$Conf{RsyncClientRestoreCmd} = '$sshPath -o StrictHostKeyChecking=no -q -x -l backuppc sudo $host $rsyncPath $argList+';
 
 {% if item.ip_address is defined -%}
 $Conf{ClientNameAlias} = '{{ item.ip_address }}';

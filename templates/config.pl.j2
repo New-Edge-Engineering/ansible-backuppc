@@ -118,21 +118,21 @@ $Conf{UmaskMode} = 027;
 # you want BackupPC_nightly to run (eg: when you don't expect a lot
 # of regular backups to run).
 #
-$Conf{WakeupSchedule} = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
+$Conf{WakeupSchedule} = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 
 #
 # Maximum number of simultaneous backups to run.  If there
 # are no user backup requests then this is the maximum number
 # of simultaneous backups.
 #
-$Conf{MaxBackups} = 4;
+$Conf{MaxBackups} = 2;
 
 #
 # Additional number of simultaneous backups that users can run.
 # As many as $Conf{MaxBackups} + $Conf{MaxUserBackups} requests can
 # run at the same time.
 #
-$Conf{MaxUserBackups} = 4;
+$Conf{MaxUserBackups} = 2;
 
 #
 # Maximum number of pending link commands. New backups will only be
