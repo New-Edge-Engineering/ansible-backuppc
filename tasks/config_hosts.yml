@@ -1,0 +1,37 @@
+---
+- name: create hosts inventory file
+  template:
+    src: hosts.j2
+    dest: '/etc/backuppc/hosts'
+    mode: 'u=rw,g=r,o=r'
+    owner: 'backuppc'
+    group: 'www-data'
+    backup: yes
+  notify:
+    - restart backuppc
+  tags:
+    - backuppc
+    - configuration
+    - clients
+
+- name: create hosts configuration
+  template:
+    dest: "/etc/backuppc/{{ item.name }}.pl"
+    src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
+    mode: "u=rw,g=r,o="
+    owner: "backuppc"
+    group: "www-data"
+    force: no
+  with_items: "{{ backuppc_hosts }}"
+  notify:
+    - restart backuppc
+  tags:
+    - backuppc
+    - configuration
+    - clients
+
+- name: copy hosts specific configuration file
+  copy:
+    src: 'hostconfig/'
+    dest: '/etc/backuppc/'
+

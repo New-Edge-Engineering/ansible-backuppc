@@ -1,19 +1,23 @@
 ---
 # Software installation
 - name: ensure packages are installed
-  apt: pkg={{item}} state=latest update_cache=yes cache_valid_time=3600
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
   with_items:
-    - backuppc
     - apache2
-    - rsync
+    - backuppc
     - python-passlib # ansible htpasswd support
+    - rsync
   tags:
     - backuppc
     - packages
 
 - name: adjust apache2 config
   lineinfile:
-    name: /etc/apache2/ports.conf
+    name: '/etc/apache2/ports.conf'
     regexp: '^Listen.*80$'
     line: 'Listen localhost:80'
     state: present
@@ -21,60 +25,30 @@
 
 - name: set pool symlink
   file:
-    src=/var/lib/backuppc/pc
-    dest=/etc/backuppc/pc
-    state=link 
-    owner=backuppc
-    group=backuppc
+    src: '/var/lib/backuppc/pc'
+    dest: '/etc/backuppc/pc'
+    owner: 'backuppc'
+    group: 'backuppc'
+    state: link 
 
 # Software configuration
 - name: copy config.pl
   template:
-    src=config.pl.j2
-    dest=/etc/backuppc/config.pl
-    mode="u=rw,g=r,o=r"
-    owner=backuppc
-    group=www-data
+    src: config.pl.j2
+    dest: '/etc/backuppc/config.pl'
+    mode: 'u=rw,g=r,o=r'
+    owner: 'backuppc'
+    group: 'www-data'
+    backup: yes
   notify:
     - restart backuppc
     - restart apache2
 
-# host setup
-- name: create hosts
-  template:
-    src=hosts.j2
-    dest=/etc/backuppc/hosts
-    mode="u=rw,g=r,o=r"
-    owner=backuppc
-    group=www-data
-  notify:
-    - restart backuppc
-  tags:
-    - backuppc
-    - configuration
-    - clients
-
-- name: create hosts configuration
-  template:
-    dest: "/etc/backuppc/{{ item.name }}.pl"
-    src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
-    mode: "u=rw,g=r,o="
-    owner: "backuppc"
-    group: "www-data"
-    backup: yes
-  with_items: "{{ backuppc_hosts }}"
-  notify:
-    - restart backuppc
-  tags:
-    - backuppc
-    - configuration
-    - clients
-
 # ssh key
 - name: generate a ssh key
   user:
-    name=backuppc
-    generate_ssh_key=yes
+    name: 'backuppc'
+    generate_ssh_key: yes
   register: backuppc_server_ssh_key
   tags:
     - backuppc
@@ -83,8 +57,8 @@
 
 - name: fetch generated public ssh key
   fetch:
-    src=/var/lib/backuppc/.ssh/id_rsa.pub
-    dest=/tmp/backuppc_ssh.pub
+    src: '/var/lib/backuppc/.ssh/id_rsa.pub'
+    dest: '/tmp/backuppc_ssh.pub'
   when: backuppc_server_ssh_key|changed
   register: ssh_key_fetched
   tags:
@@ -98,8 +72,8 @@
     path: /etc/backuppc/htpasswd
     name: "{{ item.name }}"
     password: "{{ item.pass }}"
-    owner: "backuppc"
-    group: "www-data"
+    owner: 'backuppc'
+    group: 'www-data'
     mode: 'u=rw,g=r,o='
   with_items: "{{ backuppc_users }}"
   tags:
@@ -107,8 +81,12 @@
     - website
     - credientals
 
+# hosts configuration
+- name: config hosts
+  include: config_hosts.yml
+
 # loop over backuppc_hosts is done inside manage_hosts.yml
-- name: manage hosts
+- name: manage remote hosts
   include: manage_hosts.yml
   when: backuppc_manage_hosts
 
