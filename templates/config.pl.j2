@@ -1893,7 +1893,7 @@ $Conf{EMailFromUserName} = '{{ backuppc_email_from_username }}';
 # handler this is either a plain name (eg: "admin") or a fully-qualified
 # name (eg: "admin@mydomain.com").
 #
-$Conf{EMailAdminUserName} = 'backuppc';
+$Conf{EMailAdminUserName} = 'backuppc@{{ backuppc_email_domain }}';
 
 #
 # Destination domain name for email sent to users.  By default
