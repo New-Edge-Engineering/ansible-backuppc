@@ -1,6 +1,6 @@
 ---
 # Software installation
-- name: ensure packages are installed
+- name: ensure apt packages are installed
   apt:
     pkg: "{{item}}"
   with_items:
@@ -12,11 +12,31 @@
   tags:
     - backuppc
     - packages
+  when: ansible_os_family == 'Debian'
+
+- name: ensure yum packages are installed
+  yum:
+    pkg: "{{item}}"
+  with_items:
+    - backuppc
+    - rsync
+    - nfs-utils
+    # - nfs-utils-lib
+    - bzip2
+    # - samba
+    # - samba-winbind
+    # - samba-winbind-clients
+    # - pam_krb5
+    - python-passlib # ansible htpasswd support
+  tags:
+    - backuppc
+    - packages
+  when: ansible_os_family == 'RedHat'
 
 # Software fixes
 - name: add missing $Conf{Ping6Path}
   lineinfile:
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     backrefs: yes
     regexp: "^\\$Conf{Ping6Path}"
     line: "$Conf{Ping6Path} = '/bin/ping6';"
@@ -40,7 +60,7 @@
 # Software configuration
 - name: update configuration $Conf{EMailFromUserName}
   lineinfile:
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     backrefs: yes
     regexp: "^\\$Conf{EMailFromUserName}"
     line: "$Conf{EMailFromUserName} = 'backuppc@{{ backuppc_domain }}';"
@@ -52,7 +72,7 @@
 
 - name: update configuration $Conf{EMailUserDestDomain}
   lineinfile:
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     backrefs: yes
     regexp: "^\\$Conf{EMailUserDestDomain}"
     line: "$Conf{EMailUserDestDomain} = '@{{ backuppc_email_domain }}';"
@@ -62,7 +82,7 @@
 
 - name: update configuration $Conf{CgiURL}
   lineinfile:
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     backrefs: yes
     regexp: "^\\$Conf{CgiURL}"
     line: "$Conf{CgiURL} = 'http://backuppc.{{ backuppc_email_domain }}/backuppc/index.cgi';"
@@ -72,7 +92,7 @@
 
 - name: update configuration $Conf{TarClientCmd}
   lineinfile:
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     backrefs: yes
     regexp: "^(\\$Conf{TarClientCmd}.*) root (\\$host.*)$"
     line: "\\1 backuppc \\2"
@@ -83,7 +103,7 @@
 - name: update configuration $Conf{TarClientRestoreCmd}
   lineinfile:
     backrefs: yes
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     line: "\\1 backuppc \\2"
     regexp: "^(\\$Conf{TarClientRestoreCmd}.*) root (\\$host.*)$"
   tags:
@@ -93,7 +113,7 @@
 - name: update configuration $Conf{RsyncClientCmd}
   lineinfile:
     backrefs: yes
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     line: "$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
     regexp: "^\\$Conf{RsyncClientCmd}"
   tags:
@@ -103,7 +123,7 @@
 - name: update configuration $Conf{RsyncClientRestoreCmd}
   lineinfile:
     backrefs: yes
-    dest: /etc/backuppc/config.pl
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     line: "$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
     regexp: "^\\$Conf{RsyncClientRestoreCmd}"
   tags:
@@ -113,9 +133,10 @@
 #  host setup
 - name: create hosts
   lineinfile:
-    dest: /etc/backuppc/hosts
+    dest: "/etc/{{ backuppc_directory }}/hosts"
     line: "{{ item.name }} 0 {{ item.contact|default('backuppc') }} {{ item.user|default('') }}"
-  with_items: backuppc_hosts
+  with_items: "{{ backuppc_hosts }}"
+  when: backuppc_hosts|length > 0
   notify:
     - restart backuppc
   tags:
@@ -125,12 +146,13 @@
 
 - name: create hosts configuration
   template:
-    dest: "/etc/backuppc/{{ item.name }}.pl"
+    dest: "/etc/{{ backuppc_directory }}/{{ item.name }}.pl"
     src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
     owner: backuppc
     group: www-data
     mode: 0640
-  with_items: backuppc_hosts
+  with_items: "{{ backuppc_hosts }}"
+  when: backuppc_hosts|length > 0
   notify:
     - restart backuppc
   tags:
@@ -159,8 +181,8 @@
 
 - name: fetch generated public ssh key
   fetch:
-    src=/var/lib/backuppc/.ssh/id_rsa.pub
-    dest=/tmp/fetched
+    src: "/var/lib/ba{{ backuppc_directory }}ckuppc/.ssh/id_rsa.pub"
+    dest: /tmp/fetched
   when: ssh_key_generation|changed
   register: ssh_key_fetched
   tags:
@@ -169,15 +191,24 @@
     - clients
     - configuration
 
+- debug: var=backuppc_users
+
+- debug: var=item
+  with_items: "{{ backuppc_users }}"
+
+- debug: msg="{{ item.name }}:{{ item.pass }}"
+  with_items: "{{ backuppc_users }}"
+
 - name: add users to backuppc htpasswd file
   htpasswd:
-    path: /etc/backuppc/htpasswd
+    path: "/etc/{{ backuppc_directory }}/htpasswd"
     name: "{{ item.name }}"
     password: "{{ item.pass }}"
     owner: backuppc
-    group: www-data
+    group: "{{ backuppc_web_group }}"
     mode: 0640
-  with_items: backuppc_users
+  with_items: "{{ backuppc_users }}"
+  when: backuppc_users|length > 0
   tags:
     - backuppc
     - web site

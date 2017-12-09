@@ -1,8 +1,9 @@
 ---
 backuppc_domain: 'localhost'
-backuppc_email_domain: 'newedgeengineering.com'
+backuppc_email_domain: 'example.com'
 backuppc_hosts: [] # contains a list of: name, os and type (also optional ip_address and key) attributes.
 backuppc_users:
   -
     name: admin
     pass: admin
+backuppc_web_group: "{% if ansible_os_family == 'RedHat' or ansible_os_family == 'Suse' %}nginx{% elif ansible_os_family == 'Debian' %}www-data{% elif ansible_os_family == 'FreeBSD' %}www{% endif %}"

@@ -1,0 +1,2 @@
+---
+backuppc_directory: "{{ [ansible_os_family]|map('extract', {'Debian': 'backuppc', 'RedHat': 'BackupPC'})|list|first }}"
