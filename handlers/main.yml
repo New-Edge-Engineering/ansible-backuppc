@@ -2,5 +2,5 @@
 - name: restart backuppc
   service: name=backuppc state=restarted
 
-- name: restart windbind
-  service: name=winbind state=restarted
+- name: restart apache2
+  service: name=apache2 state=restarted

@@ -3,11 +3,13 @@
 - name: ensure apt packages are installed
   apt:
     pkg: "{{item}}"
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
   with_items:
     - backuppc
+    - apache2
     - rsync
-    - winbind
-    - samba
     - python-passlib # ansible htpasswd support
   tags:
     - backuppc
@@ -33,110 +35,34 @@
     - packages
   when: ansible_os_family == 'RedHat'
 
-# Software fixes
-- name: add missing $Conf{Ping6Path}
-  lineinfile:
-    dest: "/etc/{{ backuppc_directory }}/config.pl"
-    backrefs: yes
-    regexp: "^\\$Conf{Ping6Path}"
-    line: "$Conf{Ping6Path} = '/bin/ping6';"
-  notify:
-    - restart backuppc
-  tags:
-    - backuppc
-    - packages
-    - fix
-
-- name: apply www.tolaris.com patches # see http://www.tolaris.com/2012/05/17/backuppc-on-ubuntu-12-04/
-  shell: wget -q http://www.tolaris.com/blog/wp-content/uploads/2012/05/BackupPC-3.2.1-CVE-2011-170886.diff http://www.tolaris.com/blog/wp-content/uploads/2012/05/BackupPC-3.2.1-no_blank_email.diff -O- | patch -p0 -N -r - -d /usr/share/backuppc/
-  notify:
-    - restart backuppc
-  ignore_errors: yes
-  tags:
-    - backuppc
-    - packages
-    - fix
+- name: set pool symlink
+  file:
+    src: "/var/lib/{{ backuppc_directory }}/pc"
+    dest: "/etc/{{ backuppc_directory }}/pc"
+    state: link
+    owner: backuppc
+    group: backuppc
 
 # Software configuration
-- name: update configuration $Conf{EMailFromUserName}
-  lineinfile:
+- name: copy config.pl
+  template:
+    src: config.pl.j2
     dest: "/etc/{{ backuppc_directory }}/config.pl"
-    backrefs: yes
-    regexp: "^\\$Conf{EMailFromUserName}"
-    line: "$Conf{EMailFromUserName} = 'backuppc@{{ backuppc_domain }}';"
+    mode: "u=rw,g=r,o=r"
+    owner: backuppc
+    group: "{{ backuppc_web_group }}"
   notify:
     - restart backuppc
-  tags:
-    - backuppc
-    - configuration
-
-- name: update configuration $Conf{EMailUserDestDomain}
-  lineinfile:
-    dest: "/etc/{{ backuppc_directory }}/config.pl"
-    backrefs: yes
-    regexp: "^\\$Conf{EMailUserDestDomain}"
-    line: "$Conf{EMailUserDestDomain} = '@{{ backuppc_email_domain }}';"
-  tags:
-    - backuppc
-    - configuration
-
-- name: update configuration $Conf{CgiURL}
-  lineinfile:
-    dest: "/etc/{{ backuppc_directory }}/config.pl"
-    backrefs: yes
-    regexp: "^\\$Conf{CgiURL}"
-    line: "$Conf{CgiURL} = 'http://backuppc.{{ backuppc_email_domain }}/backuppc/index.cgi';"
-  tags:
-    - backuppc
-    - configuration
-
-- name: update configuration $Conf{TarClientCmd}
-  lineinfile:
-    dest: "/etc/{{ backuppc_directory }}/config.pl"
-    backrefs: yes
-    regexp: "^(\\$Conf{TarClientCmd}.*) root (\\$host.*)$"
-    line: "\\1 backuppc \\2"
-  tags:
-    - backuppc
-    - configuration
-
-- name: update configuration $Conf{TarClientRestoreCmd}
-  lineinfile:
-    backrefs: yes
-    dest: "/etc/{{ backuppc_directory }}/config.pl"
-    line: "\\1 backuppc \\2"
-    regexp: "^(\\$Conf{TarClientRestoreCmd}.*) root (\\$host.*)$"
-  tags:
-    - backuppc
-    - configuration
-
-- name: update configuration $Conf{RsyncClientCmd}
-  lineinfile:
-    backrefs: yes
-    dest: "/etc/{{ backuppc_directory }}/config.pl"
-    line: "$Conf{RsyncClientCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
-    regexp: "^\\$Conf{RsyncClientCmd}"
-  tags:
-    - backuppc
-    - configuration
-
-- name: update configuration $Conf{RsyncClientRestoreCmd}
-  lineinfile:
-    backrefs: yes
-    dest: "/etc/{{ backuppc_directory }}/config.pl"
-    line: "$Conf{RsyncClientRestoreCmd} = '$sshPath -q -x -l backuppc $host $rsyncPath $argList+';"
-    regexp: "^\\$Conf{RsyncClientRestoreCmd}"
-  tags:
-    - backuppc
-    - configuration
+    - restart apache2
 
 #  host setup
 - name: create hosts
-  lineinfile:
+  template:
+    src: hosts.j2
     dest: "/etc/{{ backuppc_directory }}/hosts"
-    line: "{{ item.name }} 0 {{ item.contact|default('backuppc') }} {{ item.user|default('') }}"
-  with_items: "{{ backuppc_hosts }}"
-  when: backuppc_hosts|length > 0
+    mode: "u=rw,g=r,o=r"
+    owner: backuppc
+    group: "{{ backuppc_web_group }}"
   notify:
     - restart backuppc
   tags:
@@ -149,7 +75,7 @@
     dest: "/etc/{{ backuppc_directory }}/{{ item.name }}.pl"
     src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
     owner: backuppc
-    group: www-data
+    group:  "{{ backuppc_web_group }}"
     mode: 0640
   with_items: "{{ backuppc_hosts }}"
   when: backuppc_hosts|length > 0
@@ -159,14 +85,6 @@
     - backuppc
     - configuration
     - clients
-
-- name: correct windbind configuration
-  lineinfile: "dest=/etc/nsswitch.conf regexp='^hosts:' line='hosts:          files mdns4_minimal [NOTFOUND=return] dns mdns4 wins'"
-  notify:
-    - restart windbind
-  tags:
-    - backuppc
-    - configuration
 
 # ssh key
 - name: generate a ssh key
@@ -181,8 +99,8 @@
 
 - name: fetch generated public ssh key
   fetch:
-    src: "/var/lib/ba{{ backuppc_directory }}ckuppc/.ssh/id_rsa.pub"
-    dest: /tmp/fetched
+    src: "/var/lib/{{ backuppc_directory }}/.ssh/id_rsa.pub"
+    dest: /tmp/backuppc_ssh.pub
   when: ssh_key_generation|changed
   register: ssh_key_fetched
   tags:
@@ -190,14 +108,6 @@
     - ssh
     - clients
     - configuration
-
-- debug: var=backuppc_users
-
-- debug: var=item
-  with_items: "{{ backuppc_users }}"
-
-- debug: msg="{{ item.name }}:{{ item.pass }}"
-  with_items: "{{ backuppc_users }}"
 
 - name: add users to backuppc htpasswd file
   htpasswd:
@@ -211,5 +121,5 @@
   when: backuppc_users|length > 0
   tags:
     - backuppc
-    - web site
+    - website
     - credientals
