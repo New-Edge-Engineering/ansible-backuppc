@@ -1,26 +1,11 @@
 ---
 backuppc_url: 'http://localhost'
 backuppc_domain: 'localhost'
-<<<<<<< HEAD
 backuppc_email_domain: 'example.com'
+backuppc_email_from_username: "backuppc@{{ backuppc_email_domain }}"
 backuppc_hosts: [] # contains a list of: name, os and type (also optional ip_address and key) attributes.
 backuppc_users:
   -
     name: admin
     pass: admin
 backuppc_web_group: "{% if ansible_os_family == 'RedHat' or ansible_os_family == 'Suse' %}nginx{% elif ansible_os_family == 'Debian' %}www-data{% elif ansible_os_family == 'FreeBSD' %}www{% endif %}"
-=======
-backuppc_email_domain: 'newedgeengineering.com'
-backuppc_email_from_username: 'user@newedgeengineering.com'
-
-# contains a list of: name, os and type (also optional contact and user) attributes.
-# backuppc_hosts: [name: 'host', os: 'linux', type: 'rsync', contact: 'backuppc', user: 'user1 user2']
-backuppc_hosts: [
-    { name: 'localhost', os: 'linux', type: 'rsync', user: 'backuppc'}
-]
-
-backuppc_users:
-  -
-    name: backuppc
-    pass: admin
->>>>>>> 5dd5628db5216dad1dd0101cd83f1e2feb58bc5b

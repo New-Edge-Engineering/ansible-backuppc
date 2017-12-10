@@ -8,7 +8,6 @@
     cache_valid_time: 3600
   with_items:
     - backuppc
-    - apache2
     - rsync
     - python-passlib # ansible htpasswd support
   tags:
@@ -23,12 +22,7 @@
     - backuppc
     - rsync
     - nfs-utils
-    # - nfs-utils-lib
     - bzip2
-    # - samba
-    # - samba-winbind
-    # - samba-winbind-clients
-    # - pam_krb5
     - python-passlib # ansible htpasswd support
   tags:
     - backuppc
@@ -53,7 +47,6 @@
     group: "{{ backuppc_web_group }}"
   notify:
     - restart backuppc
-    - restart apache2
 
 #  host setup
 - name: create hosts
