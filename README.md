@@ -34,9 +34,14 @@ roles:
 You can test this role by using the provided Vagrant file in ./tests
 
 ```bash
-bacuppc/tests$ vagrant up
-bacuppc/tests$ vagrant ssh
+bacuppc/tests$ vagrant up <os>
+bacuppc/tests$ vagrant ssh <os>
 ```
+
+For <os>, you can choose:
+* ubuntu-trusty
+* ubuntu-boinic
+* centos7 
 
 ## License ##
 
