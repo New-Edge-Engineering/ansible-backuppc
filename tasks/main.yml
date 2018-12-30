@@ -120,7 +120,6 @@
     owner: 'backuppc'
     group: "{{ backuppc_web_group }}"
     mode: 'u=rw,g=r,o='
-    mode: 0640
   with_items: "{{ backuppc_users }}"
   when: backuppc_users|length > 0
   tags:
@@ -130,10 +129,10 @@
 
 # hosts configuration
 - name: config hosts
-  include: config_hosts.yml
+  import_tasks: config_hosts.yml
 
 # loop over backuppc_hosts is done inside manage_hosts.yml
 - name: manage remote hosts
-  include: manage_hosts.yml
+  import_tasks: manage_hosts.yml
   when: backuppc_manage_hosts
 
