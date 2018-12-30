@@ -104,7 +104,7 @@
   fetch:
     src: "/var/lib/{{ backuppc_directory }}/.ssh/id_rsa.pub"
     dest: '/tmp/backuppc_ssh.pub'
-  when: backuppc_server_ssh_key|changed
+  when: backuppc_server_ssh_key is changed
   register: ssh_key_fetched
   tags:
     - backuppc
