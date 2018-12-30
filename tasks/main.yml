@@ -1,42 +1,40 @@
 ---
-# Software installation
-- name: ensure apt packages are installed
-  apt:
-    pkg: "{{item}}"
-    state: latest
-    update_cache: yes
-    cache_valid_time: 3600
-  with_items:
-    - apache2
-    - backuppc
-    - rsync
-    - python-passlib # ansible htpasswd support
-  tags:
-    - backuppc
-    - packages
-  when: ansible_os_family == 'Debian'
+# include variables
+- name: include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+      - '{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml'
+      - '{{ ansible_distribution }}.yml'
+      - '{{ ansible_os_family }}.yml'
+      skip: true
 
-- name: ensure yum packages are installed
-  yum:
-    pkg: "{{item}}"
-  with_items:
-    - backuppc
-    - rsync
-    - nfs-utils
-    - bzip2
-    - python-passlib # ansible htpasswd support
+# Software installation
+- name: ensure EPEL repository
+  package:
+     pkg: 'epel-release'
+     state: latest
   tags:
     - backuppc
     - packages
   when: ansible_os_family == 'RedHat'
 
+- name: ensure packages are installed
+  package:
+    pkg: '{{ item }}'
+    state: present
+  with_items: '{{ backuppc_packages }}'
+  tags:
+    - backuppc
+    - packages
+
 - name: adjust apache2 config
   lineinfile:
-    name: '/etc/apache2/ports.conf'
+    name: '{{ backuppc_httpd_listen_conf }}'
     regexp: '^Listen.*80$'
     line: 'Listen localhost:80'
     state: present
-  notify: restart apache2
+  notify: restart httpd
 
 - name: set pool symlink
   file:
@@ -120,7 +118,6 @@
     owner: 'backuppc'
     group: "{{ backuppc_web_group }}"
     mode: 'u=rw,g=r,o='
-    mode: 0640
   with_items: "{{ backuppc_users }}"
   when: backuppc_users|length > 0
   tags:

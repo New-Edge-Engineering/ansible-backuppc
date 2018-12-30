@@ -4,3 +4,9 @@
     name: backuppc
     enabled: yes
     state: restarted
+
+- name: restart httpd
+  service:
+    name: '{{backuppc_httpd_service_name }}'
+    enabled: yes
+    state: restarted

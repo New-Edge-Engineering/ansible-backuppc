@@ -14,4 +14,3 @@ backuppc_users:
     name: backuppc
     pass: admin
 backuppc_manage_hosts: no
-backuppc_web_group: "{% if ansible_os_family == 'RedHat' or ansible_os_family == 'Suse' %}nginx{% elif ansible_os_family == 'Debian' %}www-data{% elif ansible_os_family == 'FreeBSD' %}www{% endif %}"
