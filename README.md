@@ -6,7 +6,7 @@ is welcomed and can be done via
 
 ## Requirements & Dependencies ##
 - Tested on Mac OS X with Ansible 1.5.
-- Tested on Ubuntu Precise with Ansible 2.2.1.0
+- Tested on Ubuntu Precise with Ansible 2.2.x and 2.5.0
 
 ## Variables ##
 see defaults/main.yml for variables to overwrite and their explainations
