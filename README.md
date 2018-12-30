@@ -40,6 +40,7 @@ bacuppc/tests$ vagrant ssh <os>
 
 For <os>, you can choose:
 * ubuntu-trusty
+* ubuntu-xenial
 * ubuntu-boinic
 * centos7 
 

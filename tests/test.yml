@@ -1,7 +1,8 @@
 ---
 - hosts:
     - ubuntu-trusty
-    - ubunu-bionic
+    - ubuntu-xenial
+    - ubuntu-bionic
     - centos7
   become: True
   remote_user: root

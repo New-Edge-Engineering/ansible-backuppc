@@ -17,11 +17,28 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  config.vm.define "ubuntu-xenial" do |vagrant1|
+    vagrant1.vm.box = "ubuntu/xenial64"
+    vagrant1.vm.synced_folder ".", "/vagrant", disabled: true
+    vagrant1.ssh.forward_agent = true
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 18080
+
+    vagrant1.vm.provision "shell",
+      inline: "apt install -y python-minimal"
+
+    vagrant1.vm.provision "ansible" do |ansible|
+      ansible.playbook = "test.yml"
+    end
+  end
+
   config.vm.define "ubuntu-bionic" do |vagrant1|
     vagrant1.vm.box = "ubuntu/bionic64"
     vagrant1.vm.synced_folder ".", "/vagrant", disabled: true
     vagrant1.ssh.forward_agent = true
-    vagrant1.vm.network "forwarded_port", guest: 80, host: 28080
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 18080
+
+    vagrant1.vm.provision "shell",
+      inline: "apt install -y python-minimal"
 
     vagrant1.vm.provision "ansible" do |ansible|
       ansible.playbook = "test.yml"
@@ -32,7 +49,7 @@ Vagrant.configure(2) do |config|
     vagrant1.vm.box = "centos/7"
     vagrant1.vm.synced_folder ".", "/vagrant", disabled: true
     vagrant1.ssh.forward_agent = true
-    vagrant1.vm.network "forwarded_port", guest: 80, host: 38080
+    vagrant1.vm.network "forwarded_port", guest: 80, host: 18080
 
     vagrant1.vm.provision "ansible" do |ansible|
       ansible.playbook = "test.yml"
