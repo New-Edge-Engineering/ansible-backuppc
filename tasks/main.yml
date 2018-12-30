@@ -1,19 +1,34 @@
 ---
 # Software installation
-- name: ensure packages are installed
+- name: ensure apt packages are installed
   apt:
-    name: "{{ item }}"
+    pkg: "{{item}}"
     state: latest
     update_cache: yes
     cache_valid_time: 3600
   with_items:
     - apache2
     - backuppc
-    - python-passlib # ansible htpasswd support
     - rsync
+    - python-passlib # ansible htpasswd support
   tags:
     - backuppc
     - packages
+  when: ansible_os_family == 'Debian'
+
+- name: ensure yum packages are installed
+  yum:
+    pkg: "{{item}}"
+  with_items:
+    - backuppc
+    - rsync
+    - nfs-utils
+    - bzip2
+    - python-passlib # ansible htpasswd support
+  tags:
+    - backuppc
+    - packages
+  when: ansible_os_family == 'RedHat'
 
 - name: adjust apache2 config
   lineinfile:
@@ -25,24 +40,54 @@
 
 - name: set pool symlink
   file:
-    src: '/var/lib/backuppc/pc'
-    dest: '/etc/backuppc/pc'
+    src: "/var/lib/{{ backuppc_directory }}/pc"
+    dest: "/etc/{{ backuppc_directory }}/pc"
     owner: 'backuppc'
-    group: 'backuppc'
-    state: link 
+    group: "{{ backuppc_web_group }}"
+    state: link
 
 # Software configuration
 - name: copy config.pl
   template:
     src: config.pl.j2
-    dest: '/etc/backuppc/config.pl'
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
     mode: 'u=rw,g=r,o=r'
     owner: 'backuppc'
-    group: 'www-data'
+    group: "{{ backuppc_web_group }}"
     backup: yes
   notify:
     - restart backuppc
-    - restart apache2
+
+#  host setup
+- name: create hosts
+  template:
+    src: hosts.j2
+    dest: "/etc/{{ backuppc_directory }}/hosts"
+    mode: 'u=rw,g=r,o=r'
+    owner: 'backuppc'
+    group: "{{ backuppc_web_group }}"
+  notify:
+    - restart backuppc
+  tags:
+    - backuppc
+    - configuration
+    - clients
+
+- name: create hosts configuration
+  template:
+    dest: "/etc/{{ backuppc_directory }}/{{ item.name }}.pl"
+    src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
+    owner: 'backuppc'
+    group: "{{ backuppc_web_group }}"
+    mode: 0640
+  with_items: "{{ backuppc_hosts }}"
+  when: backuppc_hosts|length > 0
+  notify:
+    - restart backuppc
+  tags:
+    - backuppc
+    - configuration
+    - clients
 
 # ssh key
 - name: generate a ssh key
@@ -57,7 +102,7 @@
 
 - name: fetch generated public ssh key
   fetch:
-    src: '/var/lib/backuppc/.ssh/id_rsa.pub'
+    src: "/var/lib/{{ backuppc_directory }}/.ssh/id_rsa.pub"
     dest: '/tmp/backuppc_ssh.pub'
   when: backuppc_server_ssh_key|changed
   register: ssh_key_fetched
@@ -69,13 +114,15 @@
 
 - name: add users to backuppc htpasswd file
   htpasswd:
-    path: /etc/backuppc/htpasswd
+    path: "/etc/{{ backuppc_directory }}/htpasswd"
     name: "{{ item.name }}"
     password: "{{ item.pass }}"
     owner: 'backuppc'
-    group: 'www-data'
+    group: "{{ backuppc_web_group }}"
     mode: 'u=rw,g=r,o='
+    mode: 0640
   with_items: "{{ backuppc_users }}"
+  when: backuppc_users|length > 0
   tags:
     - backuppc
     - website
