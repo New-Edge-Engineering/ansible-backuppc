@@ -1,11 +1,10 @@
 ---
 backuppc_url: 'http://localhost'
 backuppc_domain: 'localhost'
-backuppc_email_domain: 'newedgeengineering.com'
-backuppc_email_from_username: 'user@newedgeengineering.com'
-
+backuppc_email_domain: 'example.com'
+backuppc_email_from_username: "backuppc@{{ backuppc_email_domain }}"
 # contains a list of: name, os and type (also optional contact and user) attributes.
-# backuppc_hosts: [name: 'host', os: 'linux', type: 'rsync', contact: 'backuppc', user: 'user1 user2']
+# backuppc_hosts: [name: 'host', os: 'linux', type: 'rsync', contact: 'backuppc', user: 'us
 backuppc_hosts: [
     { name: 'localhost', os: 'linux', type: 'rsync', user: 'backuppc'}
 ]
@@ -14,3 +13,4 @@ backuppc_users:
   -
     name: backuppc
     pass: admin
+backuppc_manage_hosts: no

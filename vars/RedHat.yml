@@ -1,0 +1,12 @@
+---
+backuppc_web_group: 'apache'
+backuppc_directory: 'BackupPC'
+backuppc_httpd_listen_conf: '/etc/httpd/conf/httpd.conf'
+backuppc_httpd_service_name: 'httpd'
+backuppc_packages:
+  - httpd
+  - backuppc
+  - rsync
+  - nfs-utils
+  - bzip2
+  - python-passlib # ansible htpasswd support

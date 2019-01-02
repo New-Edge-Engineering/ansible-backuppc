@@ -1,0 +1,10 @@
+---
+backuppc_web_group: 'www-data'
+backuppc_directory: 'backuppc'
+backuppc_httpd_listen_conf: '/etc/apache2/ports.conf'
+backuppc_httpd_service_name: 'apache2'
+backuppc_packages:
+  - apache2
+  - backuppc
+  - rsync
+  - python-passlib # ansible htpasswd support

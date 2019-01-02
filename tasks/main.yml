@@ -1,44 +1,69 @@
 ---
+# include variables
+- name: include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+      - '{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml'
+      - '{{ ansible_distribution }}.yml'
+      - '{{ ansible_os_family }}.yml'
+      skip: true
+
 # Software installation
-- name: ensure packages are installed
-  apt: pkg={{item}} state=latest update_cache=yes cache_valid_time=3600
-  with_items:
+- name: ensure EPEL repository
+  package:
+     pkg: 'epel-release'
+     state: latest
+  tags:
     - backuppc
-    - apache2
-    - rsync
-    - python-passlib # ansible htpasswd support
+    - packages
+  when: ansible_os_family == 'RedHat'
+
+- name: ensure packages are installed
+  package:
+    pkg: '{{ item }}'
+    state: present
+  with_items: '{{ backuppc_packages }}'
   tags:
     - backuppc
     - packages
 
+- name: adjust apache2 config
+  lineinfile:
+    name: '{{ backuppc_httpd_listen_conf }}'
+    regexp: '^Listen.*80$'
+    line: 'Listen localhost:80'
+    state: present
+  notify: restart httpd
+
 - name: set pool symlink
   file:
-    src=/var/lib/backuppc/pc
-    dest=/etc/backuppc/pc
-    state=link 
-    owner=backuppc
-    group=backuppc
+    src: "/var/lib/{{ backuppc_directory }}/pc"
+    dest: "/etc/{{ backuppc_directory }}/pc"
+    owner: 'backuppc'
+    group: "{{ backuppc_web_group }}"
+    state: link
 
 # Software configuration
 - name: copy config.pl
   template:
-    src=config.pl.j2
-    dest=/etc/backuppc/config.pl
-    mode="u=rw,g=r,o=r"
-    owner=backuppc
-    group=www-data
+    src: config.pl.j2
+    dest: "/etc/{{ backuppc_directory }}/config.pl"
+    mode: 'u=rw,g=r,o=r'
+    owner: 'backuppc'
+    group: "{{ backuppc_web_group }}"
+    backup: yes
   notify:
     - restart backuppc
-    - restart apache2
 
 #  host setup
 - name: create hosts
   template:
-    src=hosts.j2
-    dest=/etc/backuppc/hosts
-    mode="u=rw,g=r,o=r"
-    owner=backuppc
-    group=www-data
+    src: hosts.j2
+    dest: "/etc/{{ backuppc_directory }}/hosts"
+    mode: 'u=rw,g=r,o=r'
+    owner: 'backuppc'
+    group: "{{ backuppc_web_group }}"
   notify:
     - restart backuppc
   tags:
@@ -48,12 +73,13 @@
 
 - name: create hosts configuration
   template:
-    dest="/etc/backuppc/{{ item.name }}.pl"
-    src="backuppc-{{ item.os }}-{{ item.type }}.j2"
-    mode="u=rw,g=r,o="
-    owner="backuppc"
-    group="www-data"
+    dest: "/etc/{{ backuppc_directory }}/{{ item.name }}.pl"
+    src: "backuppc-{{ item.os }}-{{ item.type }}.j2"
+    owner: 'backuppc'
+    group: "{{ backuppc_web_group }}"
+    mode: 0640
   with_items: "{{ backuppc_hosts }}"
+  when: backuppc_hosts|length > 0
   notify:
     - restart backuppc
   tags:
@@ -64,9 +90,9 @@
 # ssh key
 - name: generate a ssh key
   user:
-    name=backuppc
-    generate_ssh_key=yes
-  register: ssh_key_generation
+    name: 'backuppc'
+    generate_ssh_key: yes
+  register: backuppc_server_ssh_key
   tags:
     - backuppc
     - ssh
@@ -74,9 +100,9 @@
 
 - name: fetch generated public ssh key
   fetch:
-    src=/var/lib/backuppc/.ssh/id_rsa.pub
-    dest=/tmp/backuppc_ssh.pub
-  when: ssh_key_generation|changed
+    src: "/var/lib/{{ backuppc_directory }}/.ssh/id_rsa.pub"
+    dest: '/tmp/backuppc_ssh.pub'
+  when: backuppc_server_ssh_key is changed
   register: ssh_key_fetched
   tags:
     - backuppc
@@ -86,15 +112,25 @@
 
 - name: add users to backuppc htpasswd file
   htpasswd:
-    path: /etc/backuppc/htpasswd
+    path: "/etc/{{ backuppc_directory }}/htpasswd"
     name: "{{ item.name }}"
     password: "{{ item.pass }}"
-    owner: "backuppc"
-    group: "www-data"
-    mode: 0640
+    owner: 'backuppc'
+    group: "{{ backuppc_web_group }}"
+    mode: 'u=rw,g=r,o='
   with_items: "{{ backuppc_users }}"
+  when: backuppc_users|length > 0
   tags:
     - backuppc
     - website
     - credientals
+
+# hosts configuration
+- name: config hosts
+  include: config_hosts.yml
+
+# loop over backuppc_hosts is done inside manage_hosts.yml
+- name: manage remote hosts
+  include: manage_hosts.yml
+  when: backuppc_manage_hosts
 

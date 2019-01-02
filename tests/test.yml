@@ -1,5 +1,9 @@
 ---
-- hosts: vagrant1
+- hosts:
+    - ubuntu-trusty
+    - ubuntu-xenial
+    - ubuntu-bionic
+    - centos7
   become: True
   remote_user: root
   roles:

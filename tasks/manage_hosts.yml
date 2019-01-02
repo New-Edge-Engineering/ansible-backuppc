@@ -1,0 +1,30 @@
+---
+- name: create user for backuppc
+  user:
+    name: backuppc
+    comment: "Backuppc User"
+    state: present
+  delegate_to: "{{ item.name }}"
+  with_items: "{{ backuppc_hosts }}"
+
+- name: copy ssh key for backuppc
+  authorized_key:
+    user: backuppc
+#    key: "{{ lookup('file', '/tmp/backuppc_ssh.pub/vagrant1/var/lib/backuppc/.ssh/id_rsa.pub') }}"
+    key: "{{ backuppc_server_ssh_key.ssh_public_key }}"
+    state: present
+    exclusive: yes
+  delegate_to: "{{ item.name }}"
+  with_items: "{{ backuppc_hosts }}"
+
+- name: copy sudoers.d config
+  copy:
+    src: backuppc.sudo
+    dest: /etc/sudoers.d/backuppc
+    mode: 'u=r,g=r,o='
+    owner: root
+    group: root
+    validate: visudo -cf %s
+  delegate_to: "{{ item.name }}"
+  with_items: "{{ backuppc_hosts }}"
+

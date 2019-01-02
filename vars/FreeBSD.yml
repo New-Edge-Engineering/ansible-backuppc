@@ -1,0 +1,5 @@
+---
+backuppc_web_group: 'www'
+backuppc_directory: '/etc/backuppc' #test me
+backuppc_httpd_listen_conf: '/usr/local/etc/httpd/ports.conf' #test me
+backuppc_packages: [] # test me

@@ -1,6 +1,12 @@
 ---
 - name: restart backuppc
-  service: name=backuppc state=restarted
+  service:
+    name: backuppc
+    enabled: yes
+    state: restarted
 
-- name: restart apache2
-  service: name=apache2 state=restarted
+- name: restart httpd
+  service:
+    name: '{{backuppc_httpd_service_name }}'
+    enabled: yes
+    state: restarted
